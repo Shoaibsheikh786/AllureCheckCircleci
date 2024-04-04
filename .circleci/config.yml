@@ -22,3 +22,7 @@ jobs:
           command: |
             mvn -B -DskipTests clean package
             mvn test
+workflows:
+  sample:
+    jobs:
+      - build-and-test
