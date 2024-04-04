@@ -1,12 +1,4 @@
 -------------------------------------------------------------------------------
 Test set: TestSuite
 -------------------------------------------------------------------------------
-Tests run: 2, Failures: 2, Errors: 0, Skipped: 0, Time elapsed: 14.485 s <<< FAILURE! - in TestSuite
-test1(tests.Login2)  Time elapsed: 7.459 s  <<< FAILURE!
-java.lang.AssertionError: expected [Google] but found [tielakjd]
-	at tests.Login2.test1(Login2.java:15)
-
-test2(tests.Login2)  Time elapsed: 3.269 s  <<< FAILURE!
-java.lang.AssertionError: expected [Google] but found [tielakjd]
-	at tests.Login2.test2(Login2.java:23)
-
+Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 18.238 s - in TestSuite
