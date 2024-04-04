@@ -1,17 +1,29 @@
 version: 2.1
 
 jobs:
-  build:
+  build-and-test:
     docker:
-      - image: cimg/node:16.13.1-browsers
-      - image: circleci/openjdk:11.0
+      - image: cimg/openjdk:11.0
+
     steps:
       - checkout
-      - run: mkdir test-reports
+
+      # Install Google Chrome Stable
       - run:
-          name: Download Selenium
-          command: curl -O http://selenium-release.storage.googleapis.com/3.5/selenium-server-standalone-3.5.3.jar
+          name: Install Google Chrome Stable
+          command: |
+            curl -sS -o - https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
+            echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
+            sudo apt-get update && sudo apt-get install -y google-chrome-stable
+
+      # Build and test your Maven project
       - run:
-          name: Start Selenium
-          command: java -jar selenium-server-standalone-3.5.3.jar -log test-reports/selenium.log
-          background: true
+          name: Build and test
+          command: |
+            mvn -B -DskipTests clean package
+            mvn test
+
+workflows:
+  sample:
+    jobs:
+      - build-and-test
