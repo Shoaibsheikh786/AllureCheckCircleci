@@ -1,22 +1,15 @@
 version: 2.1
-
 jobs:
-  build-and-test:
+  build:
     docker:
-      - image: cimg/openjdk:11.0
-
+      - image: cimg/node:16.13.1-browsers
     steps:
       - checkout
-
-      # Install Google Chrome Stable
-
-      # Build and test your Maven project
+      - run: mkdir test-reports
       - run:
-          name: Build and test
-          command: |
-            mvn -B -DskipTests clean package
-            mvn test
-workflows:
-  sample:
-    jobs:
-      - build-and-test
+          name: Download Selenium
+          command: curl -O http://selenium-release.storage.googleapis.com/3.5/selenium-server-standalone-3.5.3.jar
+      - run:
+          name: Start Selenium
+          command: java -jar selenium-server-standalone-3.5.3.jar -log test-reports/selenium.log
+          background: true
