@@ -26,7 +26,7 @@
 						
 						<!-->> To execute the xml tests-->
 						<suiteXmlFiles>
-							<suiteXmlFile>Logins.xml</suiteXmlFile>
+							<suiteXmlFile>Login2.xml</suiteXmlFile>
 							
 						</suiteXmlFiles>
 						<!-- <<-->
