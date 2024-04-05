@@ -23,7 +23,8 @@
 						<argLine>
 							-javaagent:"${settings.localRepository}/org/aspectj/aspectjweaver/${aspectj.version}/aspectjweaver-${aspectj.version}.jar"
 						</argLine>
-
+						<source>11</source>
+						<target>11</target>
 						<!-->> To execute the xml tests-->
 						<suiteXmlFiles>
 							<suiteXmlFile>Logins.xml</suiteXmlFile>
