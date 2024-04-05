@@ -9,6 +9,10 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<aspectj.version>1.9.2</aspectj.version>
+
+		<maven.compiler.source>1.6</maven.compiler.source>
+		<maven.compiler.target>1.6</maven.compiler.target>
+
 	</properties>
 
 	<build>
@@ -23,8 +27,6 @@
 						<argLine>
 							-javaagent:"${settings.localRepository}/org/aspectj/aspectjweaver/${aspectj.version}/aspectjweaver-${aspectj.version}.jar"
 						</argLine>
-						<source>6</source>
-						<target>1.6</target>
 						<!-->> To execute the xml tests-->
 						<suiteXmlFiles>
 							<suiteXmlFile>Logins.xml</suiteXmlFile>
