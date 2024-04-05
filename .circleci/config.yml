@@ -1,29 +1,39 @@
-version: 2.1
+version: 2
+
+defaults: &defaults
+    docker:
+      - image: circleci/openjdk:11-node-browsers
+    working_directory: ~/axe-selenium-java
 
 jobs:
-  build-and-test:
-    docker:
-      - image: cimg/openjdk:11.0
-
+  dependencies:
+    <<: *defaults
     steps:
       - checkout
-
-      # Install Google Chrome Stable
+      - restore_cache:
+          key: v1-mvn-deps-{{ checksum "pom.xml" }}
+      - run: mvn install -DskipTests
+      - save_cache:
+          key: v1-mvn-deps-{{ checksum "pom.xml" }}
+          paths:
+            - ~/.m2
+  tests:
+    <<: *defaults
+    steps:
+      - checkout
+      - restore_cache:
+          key: v1-mvn-deps-{{ checksum "pom.xml" }}
       - run:
-          name: Install Google Chrome Stable
-          command: |
-            curl -sS -o - https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
-            echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
-            sudo apt-get update && sudo apt-get install -y google-chrome-stable
-
-      # Build and test your Maven project
-      - run:
-          name: Build and test
-          command: |
-            mvn -B -DskipTests clean package
-            mvn test
+          command: node src/test/resources/test-app.js
+          background: true
+      - run: sleep 5 # sleep to allow the server some time to boot
+      - run: mvn test
 
 workflows:
-  sample:
+  version: 2
+  build:
     jobs:
-      - build-and-test
+      - dependencies
+      - tests:
+          requires:
+            - dependencies
