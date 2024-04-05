@@ -1,65 +1,40 @@
-version: 2
+version: 2.1
+
 jobs:
-  build:
+  build-and-test:
     docker:
-      # specify the version you desire here
-      - image: circleci/openjdk:8-jdk
-    parallelism: 4
-
-      # Specify service dependencies here if necessary
-      # CircleCI maintains a library of pre-built images
-      # documented at https://circleci.com/docs/2.0/circleci-images/
-      # - image: circleci/postgres:9.4
-
-    working_directory: ~/repo
-
-    environment:
-      # Customize the JVM maximum heap limit
-      JVM_OPTS: -Xmx3200m
-      TERM: dumb
+      - image: circleci/openjdk:11
 
     steps:
       - checkout
 
-      # Download and cache dependencies
-      - restore_cache:
-          keys:
-            - v1-dependencies-{{ checksum "build.gradle" }}
-            # fallback to using the latest cache if no exact match is found
-            - v1-dependencies-
+      # Install Chrome browser and ChromeDriver
+      - run:
+          name: Install Chrome and ChromeDriver
+          command: |
+            sudo apt-get update
+            sudo apt-get install -y wget unzip
+            wget -N https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+            sudo dpkg -i google-chrome-stable_current_amd64.deb
+            CHROME_VERSION=$(google-chrome --version | awk '{print $3}' | cut -d '.' -f 1)
+            CHROMEDRIVER_VERSION=$(curl -sS chromedriver.storage.googleapis.com/LATEST_RELEASE_${CHROME_VERSION})
+            wget -N "https://chromedriver.storage.googleapis.com/${CHROMEDRIVER_VERSION}/chromedriver_linux64.zip"
+            unzip chromedriver_linux64.zip
+            sudo mv chromedriver /usr/local/bin
+            sudo chmod +x /usr/local/bin/chromedriver
 
-      - run: gradle dependencies
+      # Install Maven
+      - run:
+          name: Install Maven
+          command: sudo apt-get install -y maven
 
-      - save_cache:
-          paths:
-            - ~/.gradle
-          key: v1-dependencies-{{ checksum "build.gradle" }}
+      # Build and test Maven project
+      - run:
+          name: Build and test
+          command: mvn -B clean test
 
-    dependencies:
-      pre:
-
-      # Install Selenium.
-      - curl http://selenium-release.storage.googleapis.com/3.141/selenium-server-standalone-3.141.0.jar > selenium-server-standalone.jar
-      - curl http://chromedriver.storage.googleapis.com/2.23/chromedriver_linux64.zip | gzip -dc > chromedriver
-      - chmod +x chromedriver
-      - 'java -jar selenium-server-standalone.jar -trustAllSSLCertificates -Dwebdriver.chrome.driver=chromedriver':
-          background: true
-      # Update Google Chrome.
-      - google-chrome --version
-      - wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
-      - sudo sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb stable main" >> /etc/apt/sources.list.d/google.list'
-      - sudo apt-get update
-      - sudo apt-get --only-upgrade install google-chrome-stable
-      - google-chrome --version
-
-      # run tests!
-      - run: gradle test
-
-      # generate reports
-      # Save artifacts
-      - store_artifacts:
-          path: ~/app/build/test-results
-
-      # Upload test results
-      - store_test_results:
-          path: ~/app/build/test-results
+workflows:
+  version: 2
+  build:
+    jobs:
+      - build-and-test
