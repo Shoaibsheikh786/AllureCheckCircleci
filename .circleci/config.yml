@@ -1,40 +1,75 @@
-version: 2.1
-
+# Java Maven CircleCI 2.0 configuration file
+#
+# Check https://circleci.com/docs/2.0/language-java/ for more details
+#
+version: 2
 jobs:
-  build-and-test:
+  build:  
     docker:
-      - image: circleci/openjdk:11
+      - image: circleci/openjdk:8-jdk-stretch
+      - image: circleci/php:apache-stretch
+         
+    
+    working_directory : ~/testHTMLproject
 
     steps:
       - checkout
-
-      # Install Chrome browser and ChromeDriver
+      
       - run:
-          name: Install Chrome and ChromeDriver
+          name: Build application Docker image
           command: |
-            sudo apt-get update
-            sudo apt-get install -y wget unzip
-            wget -N https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-            sudo dpkg -i google-chrome-stable_current_amd64.deb
-            CHROME_VERSION=$(google-chrome --version | awk '{print $3}' | cut -d '.' -f 1)
-            CHROMEDRIVER_VERSION=$(curl -sS chromedriver.storage.googleapis.com/LATEST_RELEASE_${CHROME_VERSION})
-            wget -N "https://chromedriver.storage.googleapis.com/${CHROMEDRIVER_VERSION}/chromedriver_linux64.zip"
-            unzip chromedriver_linux64.zip
-            sudo mv chromedriver /usr/local/bin
-            sudo chmod +x /usr/local/bin/chromedriver
-
-      # Install Maven
+            docker build testHTMLproject -t html-server-image:v1
+    
       - run:
-          name: Install Maven
-          command: sudo apt-get install -y maven
+          name: Run docker image
+          command: |
+            docker run -d -p 80:80 --name htmlContainer html-server-image:v1
 
-      # Build and test Maven project
+            
       - run:
-          name: Build and test
-          command: mvn -B clean test
+          name: Check the images present
+          command: |
+            docker ps
+            
+      - run:
+          name: Check if server is up
+          command: |  
+            curl localhost:80   
+  
+      - checkout
+      
+      - run: mkdir test-reports
+      
+      - run:
+          name: Download Selenium
+          command: |
+            curl -O http://selenium-release.storage.googleapis.com/3.5/selenium-server-standalone-3.5.3.jar
+      
+      - run:
+          name: Start Selenium
+          command: |
+            java -jar selenium-server-standalone-3.5.3.jar -log test-reports/selenium.log
+          background: true
 
-workflows:
-  version: 2
-  build:
-    jobs:
-      - build-and-test
+      - run: mvn dependency:go-offline
+
+      - save_cache:
+          paths:
+            - ~/.m2
+          key: v1-dependencies-{{ checksum "pom.xml" }}
+
+      # run tests!
+      - run: mvn clean integration-test
+      
+      - run:
+          name: Save test results
+          command: |
+            mkdir -p ~/testng/results/
+            find . -type f -regex "./test-output/emailable-report.html" -exec cp {} ~/testng/results/ \;
+          when: always
+      - store_test_results:
+          path: ~/testng/results/
+      - store_artifacts:
+          path: ~/testng/results/
+      - store_artifacts:
+          path:  testng/results/
