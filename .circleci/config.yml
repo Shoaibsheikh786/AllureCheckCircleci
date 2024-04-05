@@ -1,4 +1,4 @@
-version: 2.1
+version: 2
 
 defaults: &defaults
     docker:
@@ -27,7 +27,7 @@ jobs:
           command: node src/test/resources/test-app.js
           background: true
       - run: sleep 5 # sleep to allow the server some time to boot
-      - run: mvn test
+      - run: mvn test -Dmaven.compiler.source=11 -Dmaven.compiler.target=11
 
 workflows:
   version: 2
